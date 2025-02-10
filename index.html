@@ -447,89 +447,117 @@
 </div>
 
 
-    <script>
-        let cart = [];
-        let total = 0;
+<script>
+    let cart = [];
+    let total = 0;
 
-        function addToCart(product, price, event) {
-            cart.push({ product, price });
-            total += price;
-            document.getElementById('cartCount').innerText = cart.length;
-            updateCartDisplay();
+    // Load cart data from localStorage on page load
+    window.onload = function () {
+        loadCartFromLocalStorage();
+    };
 
-            // Create and animate the dot (circle)
-            const button = event.target;
-            const dot = document.createElement('div');
-            dot.classList.add('dot');
-            document.body.appendChild(dot);
-
-            const buttonRect = button.getBoundingClientRect();
-            const cartIcon = document.querySelector('.cart-icon');
-            const cartIconRect = cartIcon.getBoundingClientRect();
-
-            // Set initial position of the dot (centered in the button)
-            dot.style.top = `${buttonRect.top + buttonRect.height / 2 - 6}px`;
-            dot.style.left = `${buttonRect.left + buttonRect.width / 2 - 6}px`;
-
-            // Start the animation of the dot flying to the cart icon
-            setTimeout(() => {
-                dot.style.top = `${cartIconRect.top + cartIconRect.height / 2 - 6}px`;
-                dot.style.left = `${cartIconRect.left + cartIconRect.width / 2 - 6}px`;
-            }, 10);
-
-            // Remove the dot after animation
-            setTimeout(() => {
-                dot.remove();
-            }, 1000);
-        }
-
-        function updateCartDisplay() {
-            const cartItemsDiv = document.getElementById('cartItems');
-            const cartTotalDiv = document.getElementById('cartTotal');
-            cartItemsDiv.innerHTML = '';
-            cart.forEach((item, index) => {
-                const cartItem = document.createElement('div');
-                cartItem.className = 'cart-item';
-                cartItem.innerHTML = `
-                    <span>${item.product} - ₹${item.price}</span>
-                    <button onclick="removeFromCart(${index})">Remove</button>
-                `;
-                cartItemsDiv.appendChild(cartItem);
-            });
-            cartTotalDiv.innerText = total;
-        }
-
-        function removeFromCart(index) {
-            total -= cart[index].price;
-            cart.splice(index, 1);
+    // Load cart from localStorage
+    function loadCartFromLocalStorage() {
+        const storedCart = localStorage.getItem('cart');
+        if (storedCart) {
+            cart = JSON.parse(storedCart);
+            total = cart.reduce((acc, item) => acc + item.price, 0);
             document.getElementById('cartCount').innerText = cart.length;
             updateCartDisplay();
         }
+    }
 
-        function toggleCartModal() {
-            const cartModal = document.getElementById('cartModal');
-            const overlay = document.getElementById('overlay');
-            cartModal.classList.toggle('active');
-            overlay.classList.toggle('active');
-        }
+    // Save cart to localStorage
+    function saveCartToLocalStorage() {
+        localStorage.setItem('cart', JSON.stringify(cart));
+    }
 
-        function proceedToBuy() {
-            let itemList = cart.map(item => `${item.product} - ₹${item.price}`).join("\n");
-            let message = `Hello, I want to buy the following items:\n${itemList}\nTotal: ₹${total}`;
-            let whatsappUrl = `https://wa.me/9745544623?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-        }
+    function addToCart(product, price, event) {
+        cart.push({ product, price });
+        total += price;
+        document.getElementById('cartCount').innerText = cart.length;
+        updateCartDisplay();
 
-        document.getElementById('searchInput').addEventListener('input', function (e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const products = document.querySelectorAll('.product-card');
+        // Save cart to localStorage
+        saveCartToLocalStorage();
 
-            products.forEach(product => {
-                const productName = product.querySelector('h5').textContent.toLowerCase();
-                product.style.display = productName.includes(searchTerm) ? 'block' : 'none';
-            });
+        // Create and animate the dot (circle)
+        const button = event.target;
+        const dot = document.createElement('div');
+        dot.classList.add('dot');
+        document.body.appendChild(dot);
+
+        const buttonRect = button.getBoundingClientRect();
+        const cartIcon = document.querySelector('.cart-icon');
+        const cartIconRect = cartIcon.getBoundingClientRect();
+
+        // Set initial position of the dot (centered in the button)
+        dot.style.top = `${buttonRect.top + buttonRect.height / 2 - 6}px`;
+        dot.style.left = `${buttonRect.left + buttonRect.width / 2 - 6}px`;
+
+        // Start the animation of the dot flying to the cart icon
+        setTimeout(() => {
+            dot.style.top = `${cartIconRect.top + cartIconRect.height / 2 - 6}px`;
+            dot.style.left = `${cartIconRect.left + cartIconRect.width / 2 - 6}px`;
+        }, 10);
+
+        // Remove the dot after animation
+        setTimeout(() => {
+            dot.remove();
+        }, 1000);
+    }
+
+    function updateCartDisplay() {
+        const cartItemsDiv = document.getElementById('cartItems');
+        const cartTotalDiv = document.getElementById('cartTotal');
+        cartItemsDiv.innerHTML = '';
+        cart.forEach((item, index) => {
+            const cartItem = document.createElement('div');
+            cartItem.className = 'cart-item';
+            cartItem.innerHTML = `
+                <span>${item.product} - ₹${item.price}</span>
+                <button onclick="removeFromCart(${index})">Remove</button>
+            `;
+            cartItemsDiv.appendChild(cartItem);
         });
-    </script>
+        cartTotalDiv.innerText = total;
+    }
+
+    function removeFromCart(index) {
+        total -= cart[index].price;
+        cart.splice(index, 1);
+        document.getElementById('cartCount').innerText = cart.length;
+        updateCartDisplay();
+
+        // Save cart to localStorage
+        saveCartToLocalStorage();
+    }
+
+    function toggleCartModal() {
+        const cartModal = document.getElementById('cartModal');
+        const overlay = document.getElementById('overlay');
+        cartModal.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
+
+    function proceedToBuy() {
+        let itemList = cart.map(item => `${item.product} - ₹${item.price}`).join("\n");
+        let message = `Hello, I want to buy the following items:\n${itemList}\nTotal: ₹${total}`;
+        let whatsappUrl = `https://wa.me/9745544623?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function (e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const products = document.querySelectorAll('.product-card');
+
+        products.forEach(product => {
+            const productName = product.querySelector('h5').textContent.toLowerCase();
+            product.style.display = productName.includes(searchTerm) ? 'block' : 'none';
+        });
+    });
+</script>
+
 
 </body>
 </html>
